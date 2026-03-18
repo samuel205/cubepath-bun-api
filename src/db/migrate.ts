@@ -1,13 +1,9 @@
 import { sql } from "bun";
+import { ensureDatabaseReady } from "./init";
 
 async function migrate() {
   console.log("Ejecutando migración...");
-
-  const schema = await Bun.file(
-    import.meta.dir + "/schema.sql",
-  ).text();
-
-  await sql.unsafe(schema);
+  await ensureDatabaseReady();
 
   console.log("Migración completada correctamente");
   await sql.close();

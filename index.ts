@@ -1,10 +1,13 @@
 import { handleChatRoute } from "./src/routes/chat";
 import { landingPageHtml } from "./src/routes/landing";
 import { router } from "./src/lib/router";
+import { ensureDatabaseReady } from "./src/db/init";
 
 import "./src/routes/api/users";
 import "./src/routes/api/conversations";
 import "./src/routes/api/messages";
+
+await ensureDatabaseReady();
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
