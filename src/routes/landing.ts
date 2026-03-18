@@ -218,7 +218,7 @@ export const landingPageHtml = `<!doctype html>
                     " | provider: " +
                     (data.provider ?? "-") +
                     " | model: " +
-                    (data.model ?? model || "(auto)"),
+                    (data.model || model || "(auto)"),
                 );
               }
 

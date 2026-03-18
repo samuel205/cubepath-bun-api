@@ -1,5 +1,16 @@
 import { handleChatRoute } from "./src/routes/chat";
 import { landingPageHtml } from "./src/routes/landing";
+import { router } from "./src/lib/router";
+
+import "./src/routes/api/users";
+import "./src/routes/api/conversations";
+import "./src/routes/api/messages";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
 const server = Bun.serve({
   port: 3000,
@@ -11,6 +22,10 @@ const server = Bun.serve({
     console.log(
       `[http][${requestId}] -> ${req.method} ${url.pathname}${url.search}`,
     );
+
+    if (req.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
 
     if (req.method === "GET" && url.pathname === "/health") {
       console.log(`[http][${requestId}] <- 200 /health`);
@@ -33,6 +48,30 @@ const server = Bun.serve({
         `[http][${requestId}] <- ${response.status} /chat (${Date.now() - startedAt}ms)`,
       );
       return response;
+    }
+
+    const matched = router.match(req.method, url.pathname);
+    if (matched) {
+      try {
+        const response = await matched.handler(req, matched.params);
+        const corsResponse = new Response(response.body, {
+          status: response.status,
+          headers: {
+            ...Object.fromEntries(response.headers.entries()),
+            ...CORS_HEADERS,
+          },
+        });
+        console.log(
+          `[http][${requestId}] <- ${response.status} ${url.pathname} (${Date.now() - startedAt}ms)`,
+        );
+        return corsResponse;
+      } catch (err) {
+        console.error(`[http][${requestId}] Error:`, err);
+        return Response.json(
+          { error: "Error interno del servidor" },
+          { status: 500, headers: CORS_HEADERS },
+        );
+      }
     }
 
     console.log(`[http][${requestId}] <- 404 ${url.pathname}`);
